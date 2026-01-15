@@ -201,8 +201,7 @@ fn main() -> Result<()> {
     let music_dir = if args.len() > 1 {
         PathBuf::from(&args[1])
     } else {
-        // Default to Music directory in home folder or current directory
-        dirs::audio_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+        std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
     };
 
     if !music_dir.exists() {
