@@ -47,7 +47,7 @@ impl App {
         let status_message = if music_files.is_empty() {
             String::from("No music files found - Press 'r' to refresh or 'q' to quit")
         } else {
-            String::from("Ready - Use ↑/↓ to navigate, Enter to play, 'q' to quit")
+            String::from("Ready - Use ↑/↓ to navigate, Enter to play (auto-advances to next song), 'q' to quit")
         };
 
         Ok(App {
@@ -164,6 +164,30 @@ impl App {
         }
     }
 
+    pub fn play_next(&mut self) -> Result<()> {
+        if !self.music_files.is_empty() {
+            let was_at_end = self.selected_index == self.music_files.len() - 1;
+            self.next();
+            self.play_selected()?;
+
+            // Show special message when looping back to start
+            if was_at_end {
+                if let Some(file) = self.music_files.get(0) {
+                    self.status_message = format!("♪ Looped to beginning - Playing: {}", file.name);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn play_previous(&mut self) -> Result<()> {
+        if !self.music_files.is_empty() {
+            self.previous();
+            self.play_selected()?;
+        }
+        Ok(())
+    }
+
     pub fn volume_up(&mut self) {
         self.volume = (self.volume + 0.1).min(1.0);
         self.audio_player.set_volume(self.volume);
@@ -246,6 +270,12 @@ fn run_app<B: ratatui::backend::Backend>(
     loop {
         terminal.draw(|f| ui::draw(f, app))?;
 
+        // Check if current song has finished and auto-play next
+        if app.current_playing.is_some() && !app.is_paused && app.audio_player.is_empty() {
+            app.status_message = String::from("Auto-advancing to next song...");
+            app.play_next()?;
+        }
+
         if let Event::Key(key) = event::read()? {
             if key.kind == KeyEventKind::Press {
                 match key.code {
@@ -261,6 +291,12 @@ fn run_app<B: ratatui::backend::Backend>(
                     KeyCode::Char('-') => app.volume_down(),
                     KeyCode::Char('r') => {
                         app.refresh_files()?;
+                    }
+                    KeyCode::Char('n') => {
+                        app.play_next()?;
+                    }
+                    KeyCode::Char('p') => {
+                        app.play_previous()?;
                     }
                     _ => {}
                 }

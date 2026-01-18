@@ -221,6 +221,8 @@ fn draw_info_panel(f: &mut Frame, area: Rect, app: &App) {
         Line::from("↑/k    - Move up"),
         Line::from("↓/j    - Move down"),
         Line::from("Enter  - Play selected"),
+        Line::from("n      - Play next song"),
+        Line::from("p      - Play previous song"),
         Line::from("Space  - Pause/Resume"),
         Line::from("s      - Stop playback"),
         Line::from("+/-    - Volume up/down"),
